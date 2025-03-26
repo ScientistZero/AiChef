@@ -9,11 +9,11 @@
     <div class="row">
         <div class="col">
             <h1>Create Meal</h1>
-            <EditForm EditContext="@editcontext">
+            <EditForm EditContext="@editcontext"> <!-- Form for creating a meal -->
                 <div class="row gy-2">
                     <div class="col-12">
-                        <label class="form-label">Meal Time</label>
-                        <InputSelect @bind-Value="meal.mealtime" class="form-select">
+                        <label class="form-label">Meal Time</label> <!-- Dropdown for selecting meal time -->
+                        <InputSelect @bind-Value="meal.mealtime" class="form-select"> 
                             <option value="Breakfast">Breakfast</option>
                             <option value="Lunch">Lunch</option>
                             <option value="Dinner">Dinner</option>
@@ -37,7 +37,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var item in ingredients)
+                                    @foreach (var item in ingredients) 
                                     {
                                         <tr>
                                             <td>@item.Description</td>
@@ -62,25 +62,35 @@
 
 
 @code {
-    private EditContext? editcontext;
-    private List<Ingredient> ingredients = new List<Ingredient>();
-    private Meal meal = new();
 
-    protected override void OnInitialized()
+    [CascadingParameter] public RecipeState? rState { get; set; } // Accessing the state from the parent component]
+    private EditContext? editcontext;
+    private List<Ingredient> ingredients = new List<Ingredient>(); // List to hold ingredients
+    private Meal meal = new(); // Meal object to bind to the form
+
+    protected override void OnInitialized() 
     {
-        editcontext = new(meal);
+        if (rState is null)
+        {
+            navigationManager.NavigateTo("/", forceLoad: true); // Redirect to home if state is null
+            return;
+        }
+
+        editcontext = new(meal); 
+        meal.mealtime = rState.MealTime; // Set the initial meal time from the state
+        ingredients = rState.Ingredients; // Load existing ingredients from the state
     }
 
-    private class Meal
+    private class Meal // Class to hold the meal time and ingredient
     {
         public string? mealtime{ get; set; }
         public string? ingredient{ get; set; }
     }
-    private void AddIngredient()
+    private void AddIngredient() // Method to add an ingredient to the list
     {
-        if (!string.IsNullOrEmpty(meal.ingredient))
+        if (!string.IsNullOrEmpty(meal.ingredient)) // Check if the ingredient is not empty before adding
         {
-            ingredients.Add(new Ingredient ()
+            ingredients.Add(new Ingredient () 
             {
                     Id = Guid.NewGuid(),
                     Description = meal.ingredient
@@ -90,18 +100,21 @@
         //clear the text box
         meal.ingredient = string.Empty;
     }
-    private void RemoveAll()
+    private void RemoveAll() // Method to clear all ingredients from the list
     {
         ingredients.Clear();
     }
 
-    private void RemoveIngredient(Guid id)
+    private void RemoveIngredient(Guid id) // Method to remove a specific ingredient from the list
     {
         ingredients.Remove(ingredients.First(x=> x.Id==id));
     }
 
-    private void HandleSubmit()
+    private void HandleSubmit() // Method to handle form submission
+    
     {
+        rState.MealTime = meal.mealtime; // Update the state with the selected meal time
+        rState.Ingredients = ingredients; // Update the state with the list of ingredients
         navigationManager.NavigateTo("/mealideas");
     }
 }
