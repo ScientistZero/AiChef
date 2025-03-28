@@ -1,6 +1,8 @@
 ﻿@page "/mealideas"
 @using AiChef.Shared
+@using System.Text.Json
 @inject NavigationManager navigationManager;
+@inject HttpClient Http;
 
 
 @if (loaded == true)
@@ -23,12 +25,7 @@
 else
 {
     <div class="container">
-        <h3>RecipeState Values</h3> 
-        <p>@rState.MealTime</p>
-        @foreach (var item in rState.Ingredients) // Displaying the ingredients from RecipeState
-        {
-            <p>@item.Description</p> 
-        }
+        <p>Loading...</p>
     </div>
 }
 
@@ -45,5 +42,40 @@ else
             navigationManager.NavigateTo("/", forceLoad: true);
         }
 
+        if (rState.Ideas.Count<1)
+        {
+            GetIdeas();
+        }
+        else
+        {
+
+            loaded = true;
+            ideas = rState.Ideas;
+            StateHasChanged(); // Trigger a re-render to show the ideas
+        }
     }
+    private async void GetIdeas()
+    {
+        string baseuri = "Recipe/GetIdeas"; // Base URI for the API endpoint"
+        loaded = false; // Set loaded to false while fetching data
+
+        RecipeParms recipeParms = new RecipeParms()
+            {
+                MealTime = rState.MealTime,
+                Ingredients = rState.Ingredients,
+
+            };
+
+        //call web api controller
+        try
+        {
+            HttpResponseMessage response = await Http.PostAsJsonAsync(baseuri, recipeParms );
+        }
+        catch
+        {
+            
+        }
+
+    }
+
 }
