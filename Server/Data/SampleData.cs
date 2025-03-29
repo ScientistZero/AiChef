@@ -1,7 +1,8 @@
 ﻿using AiChef.Shared;
-    using global::AiChef.Shared;
 
-    namespace AiChef.Server.Data
+  using global::AiChef.Shared;
+
+namespace AiChef.Server.Data
     {
         public static class SampleData
         {
