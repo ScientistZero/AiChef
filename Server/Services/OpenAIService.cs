@@ -114,7 +114,7 @@ namespace AiChef.Server.Services
 
             ChatRequest request = new()
             {
-                Model = "gpt-3.5-turbo-0613",
+                Model = "gpt-3.5-turbo-0125",
                 Messages = new[] { systemMessage, userMessage },
                 Functions = new[] { _ideaFunction },
                 FunctionCall = new {Name = _ideaFunction.Name}
@@ -123,6 +123,30 @@ namespace AiChef.Server.Services
             HttpResponseMessage httpResponse = await _httpClient.PostAsJsonAsync(url, request, _jsonOptions);
 
             ChatResponse? response = await httpResponse.Content.ReadFromJsonAsync<ChatResponse>();
+
+            //get the first message in the function
+            ChatFunctionResponse? functionResponse = response.Choices?.FirstOrDefault(m => m.Message?.FunctionCall is not null)?.Message?.FunctionCall;
+
+            Result<List<Idea>>? ideasResult = new();
+
+            if(functionResponse?.Arguments is not null)
+            {
+                try
+                {
+                    ideasResult = JsonSerializer.Deserialize<Result<List<Idea>>>(functionResponse.Arguments, _jsonOptions);
+                }
+                catch (Exception ex)
+                {
+                    ideasResult = new()
+                    {
+                        Exception = ex, // Capture the exception for debugging
+                        ErrorMessage = await httpResponse.Content.ReadAsStringAsync() // Capture the raw response for debugging
+                    };
+                }
+
+            }
+            return ideasResult?.Data ?? new List<Idea>(); // Return the list of ideas or an empty list if null
+
         }
     }
 }
